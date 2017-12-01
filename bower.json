@@ -1,0 +1,21 @@
+{
+  "name": "js-vis",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "Alex Chen"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/fizban007/js-vis",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "three.js": "three#*"
+  }
+}

@@ -2,28 +2,21 @@
   "name": "js-vis",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 0"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fizban007/js-vis.git"
   },
-  "author": {
-    "name": "Alex Chen",
-    "email": "alexc@astro.princeton.edu"
-  },
+  "author": "Alex Chen",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/fizban007/js-vis/issues"
   },
-  "homepage": "https://github.com/fizban007/js-vis",
-  "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babelify": "^8.0.0",
-    "brfs": "^1.4.3",
-    "budo": "^10.0.4"
+  "homepage": "https://github.com/fizban007/js-vis#readme",
+  "dependencies": {
+    "express": "^4.16.2"
   }
 }
