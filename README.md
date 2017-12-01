@@ -11,9 +11,9 @@ It will download the necessary packages from the internet, in this case only
     bower install
 
 This will download `three.js` and put it under `public/vendor` directory. If you
-don't have `bower`, it is a package manager similar to `npm`, but it manages
-client side packages instead. After installing everything, you should be able to
-start the server using
+don't have `bower`, you can install it using `npm install -g bower`. It is a
+package manager similar to `npm`, but it manages client side packages instead.
+After installing everything, you should be able to start the server using
 
     node server.js
 
