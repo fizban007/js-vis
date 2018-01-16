@@ -1,7 +1,39 @@
 canvas {
     display: block; /* fix necessary to remove space at bottom of canvas */
 }
+/* body { */
+/*     margin: auto; */
+/*     font-family: 'Open Sans', sans-serif; */
+/*     width: 800px; */
+/*     background-color: black; */
+/* } */
+/* p { */
+/*   color: #E64A19; */
+/* } */
 body {
-  margin: 0 auto;
-  /* font-family: 'Open Sans', sans-serif; */
+    margin: 0 auto;
+    font-family: 'Roboto';
+    font-weight: 100;
+    width: 100%;
+    text-align: center;
+    background-color: black;
+}
+
+list {
+    margin-top: 40px;
+    font-size: 70px;
+    color: white;
+}
+
+a:visited {
+    color: white;
+}
+a:hover {
+    color: white;
+}
+a {
+    /* text-decoration: undeline; */
+    text-decoration: none;
+    color: white;
+    font-size: 30px;
 }

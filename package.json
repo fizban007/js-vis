@@ -6,10 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/fizban007/js-vis.git"
-  },
+  "repository": "git+https://github.com/fizban007/js-vis.git",
   "author": "Alex Chen",
   "license": "MIT",
   "bugs": {
@@ -19,6 +16,10 @@
   "dependencies": {
     "express": "^4.16.2",
     "fs": "0.0.1-security",
-    "socket.io": "^2.0.4"
+    "socket.io": "^2.0.4",
+    "three": "^0.88.0"
+  },
+  "devDependencies": {
+    "webpack": "^3.10.0"
   }
 }

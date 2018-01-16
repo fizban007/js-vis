@@ -20,17 +20,17 @@ var urlToParse = location.search;
 var result = parseQueryString(urlToParse );
 // console.info(JSON.stringify(result));
 
-var folder = "data/magnetar/";
+var folder = "data/pulsar_movie/";
 var normalization = 1;
 var shift = 0;
 
-if (result.page == "pulsar") {
-    folder = "data/pulsar/";
-} else if (result.page == "pulsar_sasha") {
-    folder = "data/pulsar_sasha/";
-    normalization = 50;
-    shift = -630;
-}
+// if (result.page == "pulsar") {
+//     folder = "data/pulsar/";
+// } else if (result.page == "pulsar_sasha") {
+//     folder = "data/pulsar_sasha/";
+//     normalization = 50;
+//     shift = -630;
+// }
 
 var saveFile = function (strData, filename) {
     var link = document.createElement('a');
@@ -236,16 +236,16 @@ function start(vs, fs) {
     var frame = 0;
     var startTime = Date.now();
     var lines = [];
-    loader.load(folder + "line0", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line1", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line2", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line3", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line4", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line5", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line6", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line7", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line8", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line9", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line0", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line1", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line2", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line3", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line4", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line5", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line6", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line7", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line8", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line9", function(data) {make_field_line(data, lines);});
 
     function onWindowResize() {
 		    camera.aspect = window.innerWidth / window.innerHeight;
@@ -255,9 +255,10 @@ function start(vs, fs) {
     function animate() {
 		    requestAnimationFrame( animate );
         var time = Date.now();
-        if (!paused && time - startTime > 1000/20) {
+        // if (!paused && time - startTime > 1000/20) {
+        if (!paused) {
             startTime = Date.now();
-            if (frame < -200) {
+            if (frame < 120000) {
                 frame += 200;
             } else {
                 frame = 0;
@@ -268,19 +269,19 @@ function start(vs, fs) {
                 electrons.geometry.attributes.position.needsUpdate = true;
                 positrons.geometry.attributes.position.needsUpdate = true;
             }
-            // loader.load("data/twist1/pos_e_" + ("000" + frame).slice(-6),
-            loader.load(folder + "pos_e",
+            loader.load(folder + "pos_e_" + ("000" + frame).slice(-6),
+            // loader.load(folder + "pos_e",
                         // Function when resource is loaded
                         function(data) {
                             update_particles(data, 'e');
                         });
-            // loader.load("data/twist1/pos_p_" + ("000" + frame).slice(-6),
-            loader.load(folder + "pos_p",
+            loader.load(folder + "pos_p_" + ("000" + frame).slice(-6),
+            // loader.load(folder + "pos_p",
                         // Function when resource is loaded
                         function(data) {
                             update_particles(data, 'p');
                         });
-            paused = true;
+            // paused = true;
         }
 
         // required if controls.enableDamping or controls.autoRotate are set to true
@@ -324,25 +325,25 @@ function start(vs, fs) {
         // }
     }
 
-    // document.body.onkeyup = function() {
-    //     // paused = !paused;
-    //     renderer.render( scene, camera );
-    //     socket.emit('render-frame', {
-    //         // frame: frame++,
-    //         frame: 0,
-    //         file: document.querySelector('canvas').toDataURL()
-    //     });
-    // };
+    document.body.onkeyup = function() {
+        paused = !paused;
+        // renderer.render( scene, camera );
+        // socket.emit('render-frame', {
+        //     // frame: frame++,
+        //     frame: 0,
+        //     file: document.querySelector('canvas').toDataURL()
+        // });
+    };
 
     animate();
 }
 
 // This is a basic asyncronous shader loader for THREE.js.
 function ShaderLoader(vertex_url, fragment_url, onLoad, onProgress, onError) {
-    var vertex_loader = new THREE.XHRLoader(THREE.DefaultLoadingManager);
+    var vertex_loader = new THREE.FileLoader(THREE.DefaultLoadingManager);
     vertex_loader.setResponseType('text');
     vertex_loader.load(vertex_url, function (vertex_text) {
-        var fragment_loader = new THREE.XHRLoader(THREE.DefaultLoadingManager);
+        var fragment_loader = new THREE.FileLoader(THREE.DefaultLoadingManager);
         fragment_loader.setResponseType('text');
         fragment_loader.load(fragment_url, function (fragment_text) {
             onLoad(vertex_text, fragment_text);
