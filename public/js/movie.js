@@ -21,8 +21,10 @@ var result = parseQueryString(urlToParse );
 // console.info(JSON.stringify(result));
 
 var folder = "data/pulsar_movie/";
+var folder_lines = "data/"
 var normalization = 1;
 var shift = 0;
+var total_steps = 110000;
 
 // if (result.page == "pulsar") {
 //     folder = "data/pulsar/";
@@ -80,14 +82,14 @@ var scene = new THREE.Scene();
 const width = window.innerWidth;
 const height = window.innerHeight;
 const aspect = width / height;
-var paused = false;
+var paused = true;
 
 // document.addEventListener('mousedown', function() {
 //     paused = !paused;
 // }, false);
 var camera = new THREE.PerspectiveCamera( 75, aspect, 0.1, 1000 );
-
-camera.position.y = -10;
+var cam_radius = 10;
+camera.position.y = -cam_radius;
 // camera.position.x = 7;
 camera.lookAt([0, 0, 0]);
 camera.up = new THREE.Vector3(0, 0, 1);
@@ -144,11 +146,11 @@ ShaderLoader("shaders/particle.vert", "shaders/particle.frag", function (vs, fs)
 function start(vs, fs) {
     var uniforms_e = {
         texture:  { value: new THREE.TextureLoader().load( "textures/sprites/spark1.png" ) },
-       uCol: new THREE.Uniform(new THREE.Color(0.01, 0.01, 1.0))
+       uCol: new THREE.Uniform(new THREE.Color(0.02, 0.02, 1.0))
     };
     var uniforms_p = {
         texture:  { value: new THREE.TextureLoader().load( "textures/sprites/spark1.png" ) },
-        uCol: new THREE.Uniform(new THREE.Color(1.0, 0.01, 0.01))
+        uCol: new THREE.Uniform(new THREE.Color(1.0, 0.02, 0.02))
     };
     var shaderMaterial_e = new THREE.ShaderMaterial( {
         uniforms:       uniforms_e,
@@ -188,8 +190,9 @@ function start(vs, fs) {
 
     // Read an arraybuffer of particle positions
     function update_particles(data, species) {
-        var floatView = new Float32Array(data);
-        var len = floatView.length;
+        // var floatView = new Float32Array(data);
+        var floatView = data;
+        var len = data.length;
         if (species == 'e') {
             for (var i = 0; i < len/3; i++) {
                 pos_e[i * 3] = (floatView[i * 3] + shift) / normalization;
@@ -219,11 +222,11 @@ function start(vs, fs) {
         line.setGeometry(geom, function(p) {
             // return p * (1.0 - p);
             // return 0.1 * p * (1.0 - p);
-            return 0.015;
+            return 0.010;
         });
         var mat = new MeshLineMaterial({
             color: new THREE.Color(0x6aed5a),
-            opacity: 1.0,
+            opacity: 0.7,
             depthWrite: false,
             // depthTest: false,
             transparent: true
@@ -235,17 +238,34 @@ function start(vs, fs) {
 
     var frame = 0;
     var startTime = Date.now();
+    var pausedTime = Date.now();
+    var rotation = 0.0;
     var lines = [];
-    // loader.load(folder + "line0", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line1", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line2", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line3", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line4", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line5", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line6", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line7", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line8", function(data) {make_field_line(data, lines);});
-    // loader.load(folder + "line9", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_0_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_1_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_2_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_3_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_4_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_5_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_6_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_7_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_8_000400", function(data) {make_field_line(data, lines);});
+    loader.load(folder_lines + "line_9_000400", function(data) {make_field_line(data, lines);});
+
+    var buffers_e = [];
+    var buffers_p = [];
+    for (var j = 200; j < total_steps; j += 200) {
+        loader.load(folder + "pos_e_" + ("000" + j).slice(-6),
+                    function(data) {
+                        var floatView = new Float32Array(data);
+                        buffers_e.push(floatView);
+                    });
+        loader.load(folder + "pos_p_" + ("000" + j).slice(-6),
+                    function(data) {
+                        var floatView = new Float32Array(data);
+                        buffers_p.push(floatView);
+                    });
+    }
 
     function onWindowResize() {
 		    camera.aspect = window.innerWidth / window.innerHeight;
@@ -257,30 +277,33 @@ function start(vs, fs) {
         var time = Date.now();
         // if (!paused && time - startTime > 1000/20) {
         if (!paused) {
-            startTime = Date.now();
-            if (frame < 120000) {
+            // startTime = Date.now();
+            if (frame <= total_steps) {
                 frame += 200;
             } else {
-                frame = 0;
-                for (var i = 0; i < pos_e.length; i++) {
-                    pos_e[i] = 0.0;
-                    pos_p[i] = 0.0;
-                }
-                electrons.geometry.attributes.position.needsUpdate = true;
-                positrons.geometry.attributes.position.needsUpdate = true;
+                // frame = 0;
+                // for (var i = 0; i < pos_e.length; i++) {
+                //     pos_e[i] = 0.0;
+                //     pos_p[i] = 0.0;
+                // }
+                // electrons.geometry.attributes.position.needsUpdate = true;
+                // positrons.geometry.attributes.position.needsUpdate = true;
+                paused = true;
             }
-            loader.load(folder + "pos_e_" + ("000" + frame).slice(-6),
-            // loader.load(folder + "pos_e",
-                        // Function when resource is loaded
-                        function(data) {
-                            update_particles(data, 'e');
-                        });
-            loader.load(folder + "pos_p_" + ("000" + frame).slice(-6),
-            // loader.load(folder + "pos_p",
-                        // Function when resource is loaded
-                        function(data) {
-                            update_particles(data, 'p');
-                        });
+            update_particles(buffers_e[frame/200], 'e');
+            update_particles(buffers_p[frame/200], 'p');
+            // loader.load(folder + "pos_e_" + ("000" + frame).slice(-6),
+            // // loader.load(folder + "pos_e",
+            //             // Function when resource is loaded
+            //             function(data) {
+            //                 update_particles(data, 'e');
+            //             });
+            // loader.load(folder + "pos_p_" + ("000" + frame).slice(-6),
+            // // loader.load(folder + "pos_p",
+            //             // Function when resource is loaded
+            //             function(data) {
+            //                 update_particles(data, 'p');
+            //             });
             // paused = true;
         }
 
@@ -292,7 +315,8 @@ function start(vs, fs) {
     }
 
     function render() {
-		    var time = (Date.now() - startTime) * 0.005;
+		    var time = (Date.now() - startTime) * 0.004;
+        startTime = Date.now();
         // frame += 200;
         positrons.visible = menu.positrons;
         electrons.visible = menu.electrons;
@@ -301,11 +325,21 @@ function start(vs, fs) {
         });
         sphere.visible = menu.star;
 
-		    positrons.rotation.z = 0.01 * time;
-		    electrons.rotation.z = 0.01 * time;
-        lines.forEach(function(l, i){
-            l.rotation.z = 0.01*time;
-        });
+        if (!paused) {
+            rotation += 0.01 * time;
+            camera.position.y = -cam_radius * Math.cos( rotation );
+            camera.position.x = cam_radius * Math.sin( rotation );
+            camera.position.z = 0.0;
+        // camera.lookAt([0, 0, 0]);
+        // camera.up = new THREE.Vector3(0, 0, 1);
+            camera.updateProjectionMatrix();
+        }
+        // angle += 0.01;
+		    // positrons.rotation.z = -0.01 * time;
+		    // electrons.rotation.z = -0.01 * time;
+        // lines.forEach(function(l, i){
+        //     l.rotation.z = -0.01*time;
+        // });
 		    // var sizes = pGeometry.attributes.size.array;
 		    // for ( var i = 0; i < particles; i++ ) {
 				//     sizes[ i ] = 1 * ( 1 + Math.sin( 0.1 * i + time ) );
@@ -325,8 +359,14 @@ function start(vs, fs) {
         // }
     }
 
-    document.body.onkeyup = function() {
-        paused = !paused;
+    document.body.onkeyup = function(event) {
+        var key = event.which || event.keyCode || 0;
+        if (key === 32) {
+            paused = !paused;
+            if (!paused) {
+                startTime = Date.now();
+            }
+        }
         // renderer.render( scene, camera );
         // socket.emit('render-frame', {
         //     // frame: frame++,
