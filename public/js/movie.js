@@ -83,6 +83,7 @@ const width = window.innerWidth;
 const height = window.innerHeight;
 const aspect = width / height;
 var paused = true;
+var rot_paused = true;
 
 // document.addEventListener('mousedown', function() {
 //     paused = !paused;
@@ -233,8 +234,22 @@ function start(vs, fs) {
         });
         var mesh = new THREE.Mesh(line.geometry, mat);
         scene.add(mesh);
-        lines.push(mesh);
+        lines.push(line);
     };
+
+    function update_field_line(buffers, step, lines) {
+        for (var j = 0; j < 10; j += 1) {
+            var geom = lines[j].geometry;
+            // var g = lines[j].g;
+            for (var k = 0; k < geom.attributes.position.length/3; k += 1) {
+                // geom[k] = buffers[j][step][k];
+                geom.attributes.position[k*3] = buffers[j][step][k*3];
+                geom.attributes.position[k*3 + 1] = buffers[j][step][k*3 + 1];
+                geom.attributes.position[k*3 + 2] = buffers[j][step][k*3 + 2];
+            }
+            lines[j].setGeometry(geometry);
+        }
+    }
 
     var frame = 0;
     var startTime = Date.now();
@@ -254,6 +269,8 @@ function start(vs, fs) {
 
     var buffers_e = [];
     var buffers_p = [];
+    // var buffer_lines = [[], [], [], [], [], [], [], [], [], []];
+    var buffer_lines = [];
     for (var j = 200; j < total_steps; j += 200) {
         loader.load(folder + "pos_e_" + ("000" + j).slice(-6),
                     function(data) {
@@ -266,6 +283,19 @@ function start(vs, fs) {
                         buffers_p.push(floatView);
                     });
     }
+
+    // for (var j = 0; j < 10; j += 1) {
+    //     // buffer_lines.push([]);
+    //     var l = [];
+    //     for (var k = 1; k < total_steps/200; k += 1) {
+    //         loader.load(folder_lines + "line_" + j + "_" + ("000" + k).slice(-6),
+    //                     function(data) {
+    //                         var v = new Float32Array(data);
+    //                         l.push(v);
+    //                     });
+    //     }
+    //     buffer_lines.push(l);
+    // }
 
     function onWindowResize() {
 		    camera.aspect = window.innerWidth / window.innerHeight;
@@ -292,6 +322,7 @@ function start(vs, fs) {
             }
             update_particles(buffers_e[frame/200], 'e');
             update_particles(buffers_p[frame/200], 'p');
+            // update_field_line(buffer_lines, frame/200, lines);
             // loader.load(folder + "pos_e_" + ("000" + frame).slice(-6),
             // // loader.load(folder + "pos_e",
             //             // Function when resource is loaded
@@ -325,11 +356,16 @@ function start(vs, fs) {
         });
         sphere.visible = menu.star;
 
-        if (!paused) {
-            rotation += 0.01 * time;
-            camera.position.y = -cam_radius * Math.cos( rotation );
-            camera.position.x = cam_radius * Math.sin( rotation );
-            camera.position.z = 0.0;
+        if (!rot_paused) {
+            cam_radius = Math.sqrt(camera.position.x * camera.position.x +
+                                   camera.position.y * camera.position.y);
+            rotation = Math.atan(-camera.position.x/camera.position.y);
+            // rotation += 0.01 * time;
+            // camera.position.y = -cam_radius * Math.cos( rotation );
+            // camera.position.x = cam_radius * Math.sin( rotation );
+            camera.position.y += 0.02 * camera.position.x / cam_radius;
+            camera.position.x -= 0.02 * camera.position.y / cam_radius;
+            // camera.position.z = 0.0;
         // camera.lookAt([0, 0, 0]);
         // camera.up = new THREE.Vector3(0, 0, 1);
             camera.updateProjectionMatrix();
@@ -363,9 +399,12 @@ function start(vs, fs) {
         var key = event.which || event.keyCode || 0;
         if (key === 32) {
             paused = !paused;
+            rot_paused = paused;
             if (!paused) {
                 startTime = Date.now();
             }
+        } else if (key === 82) {
+            rot_paused = !rot_paused;
         }
         // renderer.render( scene, camera );
         // socket.emit('render-frame', {

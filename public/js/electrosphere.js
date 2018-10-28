@@ -2,8 +2,8 @@
 // BASIC SETUP
 // ------------------------------------------------
 // var MeshLine = require( 'three.meshline' );
-var socket = io.connect('http://localhost:4000');
-var strDownloadMime = "image/octet-stream";
+// var socket = io.connect('http://localhost:4000');
+// var strDownloadMime = "image/octet-stream";
 
 var parseQueryString = function(url) {
     var urlParams = {};
@@ -20,17 +20,17 @@ var urlToParse = location.search;
 var result = parseQueryString(urlToParse );
 // console.info(JSON.stringify(result));
 
-var folder = "data/magnetar/";
+var folder = "data/electrosphere/";
 var normalization = 1;
 var shift = 0;
 
-if (result.page == "pulsar") {
-    folder = "data/pulsar/";
-} else if (result.page == "pulsar_sasha") {
-    folder = "data/pulsar_sasha/";
-    normalization = 50;
-    shift = -630;
-}
+// if (result.page == "pulsar") {
+//     folder = "data/pulsar/";
+// } else if (result.page == "pulsar_sasha") {
+//     folder = "data/pulsar_sasha/";
+//     normalization = 50;
+//     shift = -630;
+// }
 
 var saveFile = function (strData, filename) {
     var link = document.createElement('a');
@@ -48,7 +48,7 @@ var saveFile = function (strData, filename) {
 var Menu = function() {
     this.electrons = true;
     this.positrons = true;
-    this.fieldLines = true;
+    // this.fieldLines = true;
     this.star = true;
     this.screenshot = function() {
         // renderer.render( scene, camera );
@@ -69,12 +69,13 @@ window.onload = function() {
     var gui = new dat.GUI();
     gui.add(menu, 'electrons');
     gui.add(menu, 'positrons');
-    gui.add(menu, 'fieldLines');
+    // gui.add(menu, 'fieldLines');
     gui.add(menu, 'star');
     gui.add(menu, 'screenshot');
 };
 // Create an empty scene
 var scene = new THREE.Scene();
+scene.background = new THREE.Color( 0xdddddd );
 
 // Create a basic perspective camera
 const width = window.innerWidth;
@@ -98,12 +99,14 @@ controls.update();
 
 // Create a renderer with Antialiasing
 var renderer = new THREE.WebGLRenderer({
+    alpha:true,
     antialias:true,
     preserveDrawingBuffer: true
 });
 
 // Configure renderer clear color
-renderer.setClearColor("#000000");
+// renderer.setClearColor("#000000");
+renderer.setClearColor("#ffffff", 1);
 
 // Configure renderer size
 // renderer.setSize( window.innerWidth, window.innerHeight );
@@ -136,19 +139,31 @@ sphere.matrixAutoUpdate = false;
 // Add cube to Scene
 scene.add( sphere );
 
-// Load the vertex and fragment shaders from external file
-ShaderLoader("shaders/particle.vert", "shaders/particle.frag", function (vs, fs) {
-    start(vs, fs);
+var manager = new THREE.LoadingManager();
+var loader = new THREE.FileLoader(manager);
+var textureloader = new THREE.TextureLoader(manager);
+var vs, fs;
+loader.setResponseType('text');
+loader.load("shaders/particle.vert", function(f) {
+    vs = f;
 });
+loader.load("shaders/particle.frag", function(f) {
+    fs = f;
+});
+var spark = textureloader.load("textures/sprites/spark1.png");
 
-function start(vs, fs) {
+manager.onLoad = function() {
+    start();
+};
+
+function start() {
     var uniforms_e = {
-        texture:  { value: new THREE.TextureLoader().load( "textures/sprites/spark1.png" ) },
-        uCol: new THREE.Uniform(new THREE.Color(0.01, 0.01, 1.0))
+        texture:  { value: spark },
+	uCol: new THREE.Uniform(new THREE.Color(0.0, 0.0, 0.9))
     };
     var uniforms_p = {
-        texture:  { value: new THREE.TextureLoader().load( "textures/sprites/spark1.png" ) },
-        uCol: new THREE.Uniform(new THREE.Color(1.0, 0.01, 0.01))
+        texture:  { value: spark },
+        uCol: new THREE.Uniform(new THREE.Color(0.9, 0.0, 0.0))
     };
     var shaderMaterial_e = new THREE.ShaderMaterial( {
         uniforms:       uniforms_e,
@@ -157,8 +172,8 @@ function start(vs, fs) {
         blending:       THREE.CustomBlending,
         blendEquation:  THREE.AddEquation,
         blendSrc:       THREE.SrcAlphaFactor,
-        blendDst:       THREE.OneFactor,
-        depthWrite:     false,
+        blendDst:       THREE.OneMinusSrcAlphaFactor,
+        depthWrite:     true,
         transparent:    true,
         vertexColors:   true
     });
@@ -169,8 +184,9 @@ function start(vs, fs) {
         blending:       THREE.CustomBlending,
         blendEquation:  THREE.AddEquation,
         blendSrc:       THREE.SrcAlphaFactor,
-        blendDst:       THREE.OneFactor,
-        depthWrite:     false,
+        // blendDst:       THREE.OneFactor,
+        blendDst:       THREE.OneMinusSrcAlphaFactor,
+        depthWrite:     true,
         transparent:    true,
         vertexColors:   true
     });
@@ -207,53 +223,53 @@ function start(vs, fs) {
         }
     };
 
-    function make_field_line(data, lines) {
-        var floatView = new Float32Array(data);
-        var geom = new THREE.Geometry();
-        var len = floatView.length;
-        for (var j = 0; j < len/3; j++) {
-            var v = new THREE.Vector3(floatView[j*3], floatView[j*3+1], floatView[j*3+2]);
-            geom.vertices.push(v);
-        }
-        var line = new MeshLine();
-        line.setGeometry(geom, function(p) {
-            // return p * (1.0 - p);
-            // return 0.1 * p * (1.0 - p);
-            return 0.015;
-        });
-        var mat = new MeshLineMaterial({
-            color: new THREE.Color(0x6aed5a),
-            opacity: 1.0,
-            depthWrite: false,
-            // depthTest: false,
-            transparent: true
-        });
-        var mesh = new THREE.Mesh(line.geometry, mat);
-        scene.add(mesh);
-        lines.push(mesh);
-    };
+    // function make_field_line(data, lines) {
+    //     var floatView = new Float32Array(data);
+    //     var geom = new THREE.Geometry();
+    //     var len = floatView.length;
+    //     for (var j = 0; j < len/3; j++) {
+    //         var v = new THREE.Vector3(floatView[j*3], floatView[j*3+1], floatView[j*3+2]);
+    //         geom.vertices.push(v);
+    //     }
+    //     var line = new MeshLine();
+    //     line.setGeometry(geom, function(p) {
+    //         // return p * (1.0 - p);
+    //         // return 0.1 * p * (1.0 - p);
+    //         return 0.015;
+    //     });
+    //     var mat = new MeshLineMaterial({
+    //         color: new THREE.Color(0x6aed5a),
+    //         opacity: 1.0,
+    //         depthWrite: false,
+    //         // depthTest: false,
+    //         transparent: true
+    //     });
+    //     var mesh = new THREE.Mesh(line.geometry, mat);
+    //     scene.add(mesh);
+    //     lines.push(mesh);
+    // };
 
     var frame = 0;
     var startTime = Date.now();
-    var lines = [];
-    loader.load(folder + "line0", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line1", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line2", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line3", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line4", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line5", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line6", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line7", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line8", function(data) {make_field_line(data, lines);});
-    loader.load(folder + "line9", function(data) {make_field_line(data, lines);});
+    // var lines = [];
+    // loader.load(folder + "line0", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line1", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line2", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line3", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line4", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line5", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line6", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line7", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line8", function(data) {make_field_line(data, lines);});
+    // loader.load(folder + "line9", function(data) {make_field_line(data, lines);});
 
     function onWindowResize() {
-		    camera.aspect = window.innerWidth / window.innerHeight;
-		    camera.updateProjectionMatrix();
-		    renderer.setSize( window.innerWidth, window.innerHeight );
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( window.innerWidth, window.innerHeight );
     }
     function animate() {
-		    requestAnimationFrame( animate );
+	requestAnimationFrame( animate );
         var time = Date.now();
         if (!paused && time - startTime > 1000/20) {
             startTime = Date.now();
@@ -269,13 +285,13 @@ function start(vs, fs) {
                 positrons.geometry.attributes.position.needsUpdate = true;
             }
             // loader.load("data/twist1/pos_e_" + ("000" + frame).slice(-6),
-            loader.load(folder + "pos_e",
+            loader.load(folder + "pos_e_280000",
                         // Function when resource is loaded
                         function(data) {
                             update_particles(data, 'e');
                         });
             // loader.load("data/twist1/pos_p_" + ("000" + frame).slice(-6),
-            loader.load(folder + "pos_p",
+            loader.load(folder + "pos_p_280000",
                         // Function when resource is loaded
                         function(data) {
                             update_particles(data, 'p');
@@ -286,35 +302,35 @@ function start(vs, fs) {
         // required if controls.enableDamping or controls.autoRotate are set to true
         controls.update();
         camera.updateProjectionMatrix();
-		    render();
-		    // stats.update();
+	render();
+	// stats.update();
     }
 
     function render() {
-		    var time = (Date.now() - startTime) * 0.005;
+	var time = (Date.now() - startTime) * 0.005;
         // frame += 200;
         positrons.visible = menu.positrons;
         electrons.visible = menu.electrons;
-        lines.forEach(function(l, i){
-            l.visible = menu.fieldLines;
-        });
+        // lines.forEach(function(l, i){
+        //     l.visible = menu.fieldLines;
+        // });
         sphere.visible = menu.star;
 
-		    positrons.rotation.z = 0.01 * time;
-		    electrons.rotation.z = 0.01 * time;
-        lines.forEach(function(l, i){
-            l.rotation.z = 0.01*time;
-        });
-		    // var sizes = pGeometry.attributes.size.array;
-		    // for ( var i = 0; i < particles; i++ ) {
-				//     sizes[ i ] = 1 * ( 1 + Math.sin( 0.1 * i + time ) );
-		    // }
-		    // pGeometry.attributes.size.needsUpdate = true;
+	positrons.rotation.z = 0.01 * time;
+	electrons.rotation.z = 0.01 * time;
+        // lines.forEach(function(l, i){
+        //     l.rotation.z = 0.01*time;
+        // });
+	// var sizes = pGeometry.attributes.size.array;
+	// for ( var i = 0; i < particles; i++ ) {
+	//     sizes[ i ] = 1 * ( 1 + Math.sin( 0.1 * i + time ) );
+	// }
+	// pGeometry.attributes.size.needsUpdate = true;
         // cube.rotation.x += 0.01;
         // cube.rotation.y += 0.01;
         // uniforms.uniform1 = 1.0 * (1.0 + Math.sin(0.1 + time));
         // uniforms.uniform1.value = 1.0 * (1.0 + 0.5 * Math.sin(0.1 + time));
-		    renderer.render( scene, camera );
+	renderer.render( scene, camera );
 
         // if (positrons.rotation.z < 6.283) {
         //     socket.emit('render-frame', {
@@ -335,17 +351,4 @@ function start(vs, fs) {
     // };
 
     animate();
-}
-
-// This is a basic asyncronous shader loader for THREE.js.
-function ShaderLoader(vertex_url, fragment_url, onLoad, onProgress, onError) {
-    var vertex_loader = new THREE.XHRLoader(THREE.DefaultLoadingManager);
-    vertex_loader.setResponseType('text');
-    vertex_loader.load(vertex_url, function (vertex_text) {
-        var fragment_loader = new THREE.XHRLoader(THREE.DefaultLoadingManager);
-        fragment_loader.setResponseType('text');
-        fragment_loader.load(fragment_url, function (fragment_text) {
-            onLoad(vertex_text, fragment_text);
-        });
-    }, onProgress, onError);
 }
